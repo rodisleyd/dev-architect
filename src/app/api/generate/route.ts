@@ -20,29 +20,35 @@ export async function POST(req: Request) {
       model: "gemini-1.5-flash", 
     });
 
-    const systemPrompt = `
-      Você é um Consultor de Produtos Digitais e CTO Sênior.
+    // --- PROMPT UNIFICADO ---
+    // Juntamos as instruções e a ideia do usuário num texto só.
+    // Isso evita confusão de "partes" na API.
+    const fullPrompt = `
+      ATUE COMO: Consultor de Produtos Digitais e CTO Sênior.
+      
       REGRAS:
-      1. NÃO escreva introduções.
-      2. Markdown puro.
-      3. Analise visualmente se houver imagem.
+      1. NÃO escreva introduções ("Claro", "Aqui está").
+      2. Use Markdown puro.
+      3. Se houver imagem anexa, use-a como base para a seção de Identidade Visual.
 
-      ESTRUTURA:
+      ESTRUTURA DE RESPOSTA:
       # A Visão do Produto
+      (Conceito)
       # Identidade Visual & UX
+      (Estilo, Cores, UX)
       # Blueprint Técnico
+      (Stack, Banco, Prompt Mestre)
+
+      PEDIDO DO USUÁRIO: ${idea}
     `;
 
-    // --- A CORREÇÃO ESTÁ AQUI ---
-    // A API nova exige que o texto esteja dentro de um objeto { text: "..." }
-    const promptParts: any[] = [
-      { text: systemPrompt }, 
-      { text: `\n\nIdeia do Usuário: ${idea}` }
-    ];
+    // --- LISTA DE CONTEÚDO SIMPLIFICADA ---
+    // O SDK aceita strings diretas e objetos de imagem misturados na array.
+    const parts: any[] = [fullPrompt];
 
     if (image) {
       const base64Data = image.split(",")[1];
-      promptParts.push({
+      parts.push({
         inlineData: {
           data: base64Data,
           mimeType: "image/jpeg", 
@@ -50,13 +56,8 @@ export async function POST(req: Request) {
       });
     }
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: promptParts }],
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 5000,
-      }
-    });
+    // Chamada direta: passamos a lista e o SDK formata o JSON corretamente
+    const result = await model.generateContent(parts);
     
     const response = result.response;
     const text = response.text();
