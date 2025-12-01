@@ -1,24 +1,28 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-// --- CONFIGURAÇÕES PARA EVITAR O ERRO DE TIMEOUT ---
-export const maxDuration = 60; // Pede para a Vercel esperar até 60 segundos (o máximo do plano Free)
-export const dynamic = 'force-dynamic'; // Garante que não faça cache velho
-// --------------------------------------------------
+// Configuração para evitar Timeout na Vercel
+export const maxDuration = 60; 
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
     const { idea, image } = await req.json(); 
     
-    // --- SUA CHAVE ---
-    const apiKey = process.env.GEMINI_API_KEY || "AIzaSyBcW0JeYfji8fMVFzD4kkG-VoDX5K2jsM8"; 
-    // -----------------
+    // Busca a chave segura
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+        throw new Error("Chave de API não configurada.");
+    }
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Mantendo a versão latest que você gosta
+    // --- O SEGREDO ESTÁ AQUI ---
+    // 'gemini-1.5-pro-latest' saiu do ar (dava erro 404).
+    // 'gemini-1.5-pro-002' é a versão técnica exata do modelo mais atualizado e inteligente.
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-pro-latest", 
+      model: "gemini-1.5-pro-002", 
       generationConfig: {
         temperature: 0.8,
         maxOutputTokens: 5000,
@@ -27,9 +31,8 @@ export async function POST(req: Request) {
 
     const systemPrompt = `
       Você é um Consultor de Produtos Digitais e CTO Sênior.
-      
       REGRAS CRÍTICAS:
-      1. NÃO escreva introduções amigáveis.
+      1. NÃO escreva introduções.
       2. NÃO use emojis nos títulos.
       3. Se houver imagem, analise a Identidade Visual.
 
@@ -61,6 +64,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ result: text });
   } catch (error: any) {
     console.error("Erro na API Gemini:", error);
-    return NextResponse.json({ error: error.message || "Erro de Timeout ou Servidor." }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Erro no servidor." }, { status: 500 });
   }
 }
