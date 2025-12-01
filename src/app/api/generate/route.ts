@@ -1,19 +1,24 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
+// --- CONFIGURAÇÕES PARA EVITAR O ERRO DE TIMEOUT ---
+export const maxDuration = 60; // Pede para a Vercel esperar até 60 segundos (o máximo do plano Free)
+export const dynamic = 'force-dynamic'; // Garante que não faça cache velho
+// --------------------------------------------------
+
 export async function POST(req: Request) {
   try {
     const { idea, image } = await req.json(); 
     
     // --- SUA CHAVE ---
-    const apiKey = "AIzaSyBcW0JeYfji8fMVFzD4kkG-VoDX5K2jsM8"; 
+    const apiKey = process.env.GEMINI_API_KEY || "AIzaSyBcW0JeYfji8fMVFzD4kkG-VoDX5K2jsM8"; 
     // -----------------
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // VOLTAMOS PARA A VERSÃO ESTÁVEL (O 'Latest' estava caindo)
+    // Mantendo a versão latest que você gosta
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-pro", 
+      model: "gemini-1.5-pro-latest", 
       generationConfig: {
         temperature: 0.8,
         maxOutputTokens: 5000,
@@ -23,13 +28,10 @@ export async function POST(req: Request) {
     const systemPrompt = `
       Você é um Consultor de Produtos Digitais e CTO Sênior.
       
-      O usuário vai te enviar uma ideia e POSSIVELMENTE uma imagem de referência visual.
-      Se houver imagem, ANALISE-A: extraia cores, fontes e estilo.
-
-      REGRAS:
+      REGRAS CRÍTICAS:
       1. NÃO escreva introduções amigáveis.
       2. NÃO use emojis nos títulos.
-      3. Se houver imagem, crie uma seção "Identidade Visual & UX".
+      3. Se houver imagem, analise a Identidade Visual.
 
       ESTRUTURA (Markdown):
       # A Visão do Produto
@@ -59,7 +61,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ result: text });
   } catch (error: any) {
     console.error("Erro na API Gemini:", error);
-    // Agora o erro real é enviado para o frontend
-    return NextResponse.json({ error: error.message || "Erro interno no servidor do Google." }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Erro de Timeout ou Servidor." }, { status: 500 });
   }
 }
