@@ -15,14 +15,13 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Usando o Flash (Rápido e Estável)
+    // --- MUDANÇA TÉCNICA ---
+    // Em vez de usar o apelido genérico, usamos a versão específica "001".
+    // Isso evita o erro 404 em servidores que não atualizaram os apelidos ainda.
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash", 
+      model: "gemini-1.5-flash-001", 
     });
 
-    // --- PROMPT UNIFICADO ---
-    // Juntamos as instruções e a ideia do usuário num texto só.
-    // Isso evita confusão de "partes" na API.
     const fullPrompt = `
       ATUE COMO: Consultor de Produtos Digitais e CTO Sênior.
       
@@ -42,8 +41,6 @@ export async function POST(req: Request) {
       PEDIDO DO USUÁRIO: ${idea}
     `;
 
-    // --- LISTA DE CONTEÚDO SIMPLIFICADA ---
-    // O SDK aceita strings diretas e objetos de imagem misturados na array.
     const parts: any[] = [fullPrompt];
 
     if (image) {
@@ -56,9 +53,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // Chamada direta: passamos a lista e o SDK formata o JSON corretamente
     const result = await model.generateContent(parts);
-    
     const response = result.response;
     const text = response.text();
 
