@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     // Usando o código "001". Esse é o número de série fixo.
     // O Google nunca tira as versões numeradas do ar.
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash-001", 
+      model: "gemini-2.5-pro", 
     });
 
     const fullPrompt = `
