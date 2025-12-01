@@ -15,30 +15,31 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // --- MUDANÇA PARA O FLASH ---
-    // O modelo mais rápido, estável e que raramente dá erro 404 na conta gratuita.
+    // --- CORREÇÃO TÉCNICA ---
+    // 1. Usamos 'gemini-1.5-flash' (O mais estável e rápido)
+    // 2. Forçamos a 'apiVersion: v1beta' para garantir que ele ache o modelo
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash", 
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 5000,
-      }
+    }, {
+      apiVersion: "v1beta"
     });
+
+    const generationConfig = {
+      temperature: 0.8,
+      maxOutputTokens: 5000,
+    };
 
     const systemPrompt = `
       Você é um Consultor de Produtos Digitais e CTO Sênior.
-      REGRAS CRÍTICAS:
+      REGRAS:
       1. NÃO escreva introduções.
-      2. NÃO use emojis nos títulos.
-      3. Se houver imagem, analise a Identidade Visual.
+      2. Markdown puro.
+      3. Analise visualmente se houver imagem.
 
-      ESTRUTURA (Markdown):
+      ESTRUTURA:
       # A Visão do Produto
-      (Conceito)
       # Identidade Visual & UX
-      (UI/UX baseada na referência ou sugestão moderna)
       # Blueprint Técnico
-      (Stack, Banco, Prompt Mestre)
     `;
 
     const promptParts: any[] = [systemPrompt, `\n\nIdeia do Usuário: ${idea}`];
@@ -53,7 +54,12 @@ export async function POST(req: Request) {
       });
     }
 
-    const result = await model.generateContent(promptParts);
+    // Passamos a config de geração aqui
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: promptParts }],
+      generationConfig
+    });
+    
     const response = result.response;
     const text = response.text();
 
