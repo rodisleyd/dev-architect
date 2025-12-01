@@ -15,19 +15,10 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // --- CORREÇÃO TÉCNICA ---
-    // 1. Usamos 'gemini-1.5-flash' (O mais estável e rápido)
-    // 2. Forçamos a 'apiVersion: v1beta' para garantir que ele ache o modelo
+    // Usando o Flash (Rápido e Estável)
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash", 
-    }, {
-      apiVersion: "v1beta"
     });
-
-    const generationConfig = {
-      temperature: 0.8,
-      maxOutputTokens: 5000,
-    };
 
     const systemPrompt = `
       Você é um Consultor de Produtos Digitais e CTO Sênior.
@@ -42,7 +33,12 @@ export async function POST(req: Request) {
       # Blueprint Técnico
     `;
 
-    const promptParts: any[] = [systemPrompt, `\n\nIdeia do Usuário: ${idea}`];
+    // --- A CORREÇÃO ESTÁ AQUI ---
+    // A API nova exige que o texto esteja dentro de um objeto { text: "..." }
+    const promptParts: any[] = [
+      { text: systemPrompt }, 
+      { text: `\n\nIdeia do Usuário: ${idea}` }
+    ];
 
     if (image) {
       const base64Data = image.split(",")[1];
@@ -54,10 +50,12 @@ export async function POST(req: Request) {
       });
     }
 
-    // Passamos a config de geração aqui
     const result = await model.generateContent({
       contents: [{ role: "user", parts: promptParts }],
-      generationConfig
+      generationConfig: {
+        temperature: 0.8,
+        maxOutputTokens: 5000,
+      }
     });
     
     const response = result.response;
