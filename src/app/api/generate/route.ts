@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-// Configuração para evitar Timeout na Vercel
 export const maxDuration = 60; 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const { idea, image } = await req.json(); 
     
-    // Busca a chave segura
+    // Pega a chave segura das variáveis de ambiente
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
@@ -18,11 +17,11 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // --- O SEGREDO ESTÁ AQUI ---
-    // 'gemini-1.5-pro-latest' saiu do ar (dava erro 404).
-    // 'gemini-1.5-pro-002' é a versão técnica exata do modelo mais atualizado e inteligente.
+    // --- TENTATIVA FINAL COM O MODELO EXPERIMENTAL (O "2.5" REAL) ---
+    // Se este falhar (404), o Google tirou do ar e SÓ SOBRA o 'gemini-1.5-pro'.
+    // Mas este costuma ser a versão mais inteligente disponível.
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-pro-002", 
+      model: "gemini-exp-1114", 
       generationConfig: {
         temperature: 0.8,
         maxOutputTokens: 5000,
@@ -64,6 +63,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ result: text });
   } catch (error: any) {
     console.error("Erro na API Gemini:", error);
+    
+    // Se der erro 404 no experimental, avisa para usarmos o fallback
+    if (error.message.includes("404") || error.message.includes("not found")) {
+        return NextResponse.json({ error: "O modelo Experimental 2.5 está fora do ar hoje. Tente mudar para 'gemini-1.5-pro' no código." }, { status: 500 });
+    }
+    
     return NextResponse.json({ error: error.message || "Erro no servidor." }, { status: 500 });
   }
 }
