@@ -15,11 +15,10 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // --- VERSÃO ESTÁVEL E SEGURA ---
-    // Esta versão é Multimodal (lê imagens) e muito inteligente.
-    // É a única que o Google garante disponibilidade 100% no plano gratuito hoje.
+    // --- MUDANÇA PARA O FLASH ---
+    // O modelo mais rápido, estável e que raramente dá erro 404 na conta gratuita.
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-pro", 
+      model: "gemini-1.5-flash", 
       generationConfig: {
         temperature: 0.8,
         maxOutputTokens: 5000,
