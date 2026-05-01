@@ -8,9 +8,7 @@ export async function POST(req: Request) {
   try {
     const { idea, image } = await req.json();
 
-    const parte1 = "AIzaSyCkB2GxMJmoDEc2";
-    const parte2 = "gbw6Jcy0hsYyNFktiOM";
-    const apiKey = parte1 + parte2;
+    const apiKey = process.env.GEMINI_API_KEY || "";
 
     const genAI = new GoogleGenerativeAI(apiKey);
 

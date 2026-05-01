@@ -1,14 +1,16 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 async function main() {
-    const parte1 = "AIzaSyCkB2GxMJmoDEc2";
-    const parte2 = "gbw6Jcy0hsYyNFktiOM";
-    const apiKey = parte1 + parte2;
+    const apiKey = "AIzaSyC6485MTXY2ppFt1w8jLPwjul_rXQLMY98";
 
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const candidates = [
+        "gemini-1.5-flash",
+        "gemini-3.1-flash-lite-preview",
         "gemini-3.1-pro-preview",
+        "gemini-3.1-flash-preview",
+        "gemini-3.1-flash",
         "gemini-2.5-flash",
         "gemini-2.5-pro",
         "gemini-flash-latest"
